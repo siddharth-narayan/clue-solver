@@ -1,0 +1,8 @@
+[package]
+name = "clue-solver"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+inquire = "0.9.1"
+inquire-derive = "0.9.1"
