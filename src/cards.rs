@@ -1,5 +1,91 @@
 use inquire_derive::Selectable;
-use std::fmt::{Display, Formatter};
+use std::{
+    collections::HashSet,
+    fmt::{Display, Formatter},
+};
+
+#[derive(Eq, Hash, PartialEq, Debug, Copy, Clone)]
+
+enum Card {
+    Person(Person),
+    Weapon(Weapon),
+    Location(Location),
+}
+
+impl Card {
+    fn all_people() -> HashSet<Card> {
+        Person::all_variants_hashset()
+            .into_iter()
+            .map(|p| Self::Person(p))
+            .collect::<HashSet<Card>>()
+    }
+
+    fn all_weapons() -> HashSet<Card> {
+        Weapon::all_variants_hashset()
+            .into_iter()
+            .map(|p| Self::Weapon(p))
+            .collect::<HashSet<Card>>()
+    }
+
+    fn all_locations() -> HashSet<Card> {
+        Location::all_variants_hashset()
+            .into_iter()
+            .map(|p| Self::Location(p))
+            .collect::<HashSet<Card>>()
+    }
+
+    fn all_cards() -> Vec<Card> {
+        let mut cards = Vec::new();
+
+        for person in Person::all_variants() {
+            cards.push(Card::Person(person));
+        }
+
+        for weapon in Weapon::all_variants() {
+            cards.push(Card::Weapon(weapon));
+        }
+
+        for location in Location::all_variants() {
+            cards.push(Card::Location(location));
+        }
+
+        cards
+    }
+
+    fn all_cards_hashset() -> HashSet<Card> {
+        Self::all_cards().into_iter().collect::<HashSet<Self>>()
+    }
+
+    fn select(prompt: &str) -> Card {
+        inquire::Select::<Card>::new(prompt, Card::all_cards())
+            .prompt()
+            .unwrap()
+    }
+
+    fn multi_select(prompt: &str) -> HashSet<Card> {
+        let cards = inquire::MultiSelect::new(prompt, Card::all_cards())
+            .prompt()
+            .unwrap();
+
+        let mut card_set = HashSet::new();
+        cards.into_iter().for_each(|card| {
+            card_set.insert(card);
+        });
+
+        card_set
+    }
+}
+
+impl Display for Card {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        match self {
+            Card::Person(p) => p.fmt(f),
+            Card::Weapon(w) => w.fmt(f),
+            Card::Location(l) => l.fmt(f),
+        }
+    }
+}
+
 
 #[derive(Eq, Hash, PartialEq, Debug, Copy, Clone, Selectable)]
 pub enum Person {
@@ -21,6 +107,10 @@ impl Person {
             Self::Peacock,
             Self::Plum,
         ]
+    }
+
+    pub fn all_variants_hashset() -> HashSet<Self> {
+        Self::all_variants().into_iter().collect::<HashSet<Self>>()
     }
 }
 
@@ -57,6 +147,10 @@ impl Weapon {
             Self::Rope,
             Self::Wrench,
         ]
+    }
+
+    pub fn all_variants_hashset() -> HashSet<Self> {
+        Self::all_variants().into_iter().collect::<HashSet<Self>>()
     }
 }
 impl Display for Weapon {
@@ -98,6 +192,10 @@ impl Location {
             Self::Hall,
             Self::Study,
         ]
+    }
+
+    pub fn all_variants_hashset() -> HashSet<Self> {
+        Self::all_variants().into_iter().collect::<HashSet<Self>>()
     }
 }
 
