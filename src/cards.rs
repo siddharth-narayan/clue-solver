@@ -6,35 +6,35 @@ use std::{
 
 #[derive(Eq, Hash, PartialEq, Debug, Copy, Clone)]
 
-enum Card {
+pub enum Card {
     Person(Person),
     Weapon(Weapon),
     Location(Location),
 }
 
 impl Card {
-    fn all_people() -> HashSet<Card> {
+    pub fn all_people() -> HashSet<Card> {
         Person::all_variants_hashset()
             .into_iter()
             .map(|p| Self::Person(p))
             .collect::<HashSet<Card>>()
     }
 
-    fn all_weapons() -> HashSet<Card> {
+    pub fn all_weapons() -> HashSet<Card> {
         Weapon::all_variants_hashset()
             .into_iter()
             .map(|p| Self::Weapon(p))
             .collect::<HashSet<Card>>()
     }
 
-    fn all_locations() -> HashSet<Card> {
+    pub fn all_locations() -> HashSet<Card> {
         Location::all_variants_hashset()
             .into_iter()
             .map(|p| Self::Location(p))
             .collect::<HashSet<Card>>()
     }
 
-    fn all_cards() -> Vec<Card> {
+    pub fn all_cards() -> Vec<Card> {
         let mut cards = Vec::new();
 
         for person in Person::all_variants() {
@@ -52,17 +52,17 @@ impl Card {
         cards
     }
 
-    fn all_cards_hashset() -> HashSet<Card> {
+    pub fn all_cards_hashset() -> HashSet<Card> {
         Self::all_cards().into_iter().collect::<HashSet<Self>>()
     }
 
-    fn select(prompt: &str) -> Card {
+    pub fn select(prompt: &str) -> Card {
         inquire::Select::<Card>::new(prompt, Card::all_cards())
             .prompt()
             .unwrap()
     }
 
-    fn multi_select(prompt: &str) -> HashSet<Card> {
+    pub fn multi_select(prompt: &str) -> HashSet<Card> {
         let cards = inquire::MultiSelect::new(prompt, Card::all_cards())
             .prompt()
             .unwrap();

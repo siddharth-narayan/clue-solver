@@ -2,16 +2,11 @@ mod cards;
 mod player;
 mod util;
 
-use std::collections::HashSet;
-use std::fmt::{Display, Formatter};
-use std::hash::Hash;
+use inquire::{error::InquireResult, prompt_confirmation, prompt_u32};
 
-use inquire::prompt_u32;
-use inquire::{CustomType, InquireError, error::InquireResult};
-use inquire::{Text, prompt_confirmation};
-use inquire_derive::Selectable;
-
-use cards::{Location, Person, Weapon};
+use cards::{Card, Person, Weapon};
+use player::Player;
+use util::{Guess, clear_terminal, next_player};
 
 fn main() -> InquireResult<()> {
     // let inquire_config = RenderConfig::default_colored().with_prompt_prefix( "".into());
@@ -19,8 +14,6 @@ fn main() -> InquireResult<()> {
     // Example using single select
     println!("Select all cards you have");
     let held_cards = Card::multi_select("Cards: ");
-
-    held_cards.iter().for_each(|a| println!("{}", a));
 
     let player_count = prompt_u32("How many players other than you are there?").unwrap();
 
@@ -56,18 +49,16 @@ fn main() -> InquireResult<()> {
                 if turn == 0 {
                     let card = Card::select("What card did the player show you?");
 
-                    players.iter_mut().for_each(|player| {
-                        if currently_showing_player_idx == player.id {
-                            player.update_held(card); // Infer: We are directly told this player holds this card (not really inferred)
-                        } else {
-                            player.update_unheld(card); // Infer: If a player holds a card, no other player holds that card
-                        }
-                    });
+                    players
+                        .iter_mut()
+                        .nth((currently_showing_player_idx - 1) as usize)
+                        .unwrap()
+                        .update_held(&card);
                 } else {
                     // Infer: Some player has one of these cards -- We can build a set of potential cards, and find the similarities between shows
                     // Maybe it's something like the union of all pairwise intersection of guess cards?
 
-                    currently_showing_player.update_potential_sets(players, new_guess);
+                    currently_showing_player.add_potential_set(new_guess);
                 }
 
                 break;
@@ -93,28 +84,24 @@ fn main() -> InquireResult<()> {
             p.display();
         });
 
-        let (remaining_people, remaining_weapons, remaining_locations) =
-            recalculate_remaining_cards(&players, &held_cards);
+        // let (remaining_people, remaining_weapons, remaining_locations) =
+        //     recalculate_remaining_cards(&players, &held_cards);
 
-        println!("Remaining people:");
-        remaining_people
-            .iter()
-            .for_each(|person| println!("\t{}", person));
+        // println!("Remaining people:");
+        // remaining_people
+        //     .iter()
+        //     .for_each(|person| println!("\t{}", person));
 
-        println!("Remaining weapons:");
-        remaining_weapons
-            .iter()
-            .for_each(|weapon| println!("\t{}", weapon));
+        // println!("Remaining weapons:");
+        // remaining_weapons
+        //     .iter()
+        //     .for_each(|weapon| println!("\t{}", weapon));
 
-        println!("Remaining locations:");
-        remaining_locations
-            .iter()
-            .for_each(|location| println!("\t{}", location));
+        // println!("Remaining locations:");
+        // remaining_locations
+        //     .iter()
+        //     .for_each(|location| println!("\t{}", location));
 
-        turn += 1;
-        turn %= player_count + 1;
+        turn = next_player(turn, player_count + 1);
     }
-
-    Ok(())
 }
-

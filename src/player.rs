@@ -1,4 +1,12 @@
-struct Player {
+
+
+use std::collections::HashSet;
+use crate::Card;
+use inquire::Text;
+use inquire::prompt_u32;
+use crate::Guess;
+
+pub struct Player {
     pub id: u32,
     pub name: String,
     pub card_count: u32,
@@ -23,47 +31,46 @@ impl Player {
         }
     }
 
-    pub fn update_held(&mut self, card: Card) {
-        self.held_cards.insert(card);
+    pub fn update_held(&mut self, card: &Card) {
+        self.held_cards.insert(*card);
     }
 
-    pub fn update_potential_sets(&mut self, mut players: &Vec<Player>, held_cards: HashSet<Card>, g: Guess) {
-        // Update a potential set with a new guess
-        let potential_set = g.as_hashset();
+    // pub fn prune_potential_sets(&mut self) {
+    //     self.potentially_held_card_sets = self.potentially_held_card_sets.into_iter().filter_map(|set| {
+    //         set.remove(self.unheld_cards);
 
-        let potential_set = players
-            .iter_mut()
-            .fold(potential_set, |mut remaining_cards, player| {
-                remaining_cards
-                    .retain(|card| !player.held_cards.contains(card) && !held_cards.contains(card));
-                remaining_cards
-            });
+    //         if set.len() == 1 {
+    //             let held = set.into_iter().nth(0).unwrap();
 
-        // Infer: If other people hold 2 of the 3 cards in the guess, the shown card must be the remaining one
-        if potential_set.len() == 1 {
-            self.held_cards
-                .insert(potential_set.into_iter().last().unwrap());
-        }
+    //             self.update_held(card);
+    //             return None
+    //         }
+    //         Ok(set)
+    //     });
+    // }
+    pub fn add_potential_set(&mut self, g: Guess) {
+        self.potentially_held_card_sets.push(g.as_hashset());
     }
+   
     pub fn update_unheld(&mut self, c: Card) {
         self.unheld_cards.insert(c);
 
-        // Infer: If a card is unheld, it's not held in our potential sets, so we should update them
-        self.potentially_held_card_sets
-            .retain(|card_set| !card_set.contains(&c));
+        // // Infer: If a potential set is of size 1, then the card is necessarily held by the player
+        // self.potentially_held_card_sets
+        //     .iter_mut()
+        //     .filter(|card_set| {
+        //         if card_set.len() == 1 {
+        //             let iter = card_set.iter();
+        //             self.held_cards.insert(*iter.last().unwrap());
+        //             return false;
+        //         }
 
-        // Infer: If a potential set is of size 1, then the card is necessarily held by the player
-        self.potentially_held_card_sets
-            .iter_mut()
-            .filter(|card_set| {
-                if card_set.len() == 1 {
-                    let iter = card_set.iter();
-                    self.held_cards.insert(*iter.last().unwrap());
-                    return false;
-                }
+        //         return true;
+        //     });
+    }
 
-                return true;
-            });
+    pub fn update_unheld_set(&mut self, c: &HashSet<Card>) {
+        self.unheld_cards.extend(c);
     }
 
     pub fn display(&self) {
